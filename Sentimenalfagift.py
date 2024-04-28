@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 from collections import Counter
 from tensorflow import keras
 from keras.preprocessing.sequence import pad_sequences
-from keras.preprocessing.text import Tokenizer
+import tensorflow as tf
+from tensorflow.keras.preprocessing.text import Tokenizer
 
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
