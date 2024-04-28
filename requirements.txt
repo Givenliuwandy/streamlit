@@ -2,3 +2,4 @@ streamlit
 Keras-Preprocessing
 sastrawi
 nltk
+wordcloud
