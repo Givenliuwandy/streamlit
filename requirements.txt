@@ -1,6 +1,6 @@
 streamlit
 Keras-Preprocessing
-Keras==2.2.4
+Keras
 sastrawi
 nltk
 wordcloud
