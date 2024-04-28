@@ -3,3 +3,4 @@ Keras-Preprocessing
 sastrawi
 nltk
 wordcloud
+tensorflow
