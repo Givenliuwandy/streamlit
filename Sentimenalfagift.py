@@ -162,7 +162,7 @@ if uploaded_file is not None:
                 generate_word_cloud(words_neg, 'Word Cloud Negative Sentiment')
 
             # Word cloud and top 10 words for negative sentiment
-            st.write("<h2 style='text-align: center;'>Top 20 Words:</h2>", unsafe_allow_html=True)
+            st.write("<h2 style='text-align: center;'>Top 15 Words:</h2>", unsafe_allow_html=True)
             col5, col6 = st.columns(2)
             with col5:
                 generate_bar_chart(words_pos, 'Top 15 Words Positive Sentiment')
