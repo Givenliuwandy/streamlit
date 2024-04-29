@@ -42,7 +42,7 @@ def generate_bar_chart(text_data, title=None):
     word_freq = Counter(words)
 
     # Get top 10 words and their frequencies
-    top_words = dict(word_freq.most_common(20))
+    top_words = dict(word_freq.most_common(15))
 
     # Plot bar chart
     plt.figure(figsize=(8, 5))
@@ -163,9 +163,11 @@ if uploaded_file is not None:
 
             # Word cloud and top 10 words for negative sentiment
             st.write("<h2 style='text-align: center;'>Top 20 Words:</h2>", unsafe_allow_html=True)
-            
-                generate_bar_chart(words_pos, 'Top 20 Words Positive Sentiment')
-                generate_bar_chart(words_neg, 'Top 20 Words Negative Sentiment')
+            col5, col6 = st.columns(2)
+            with col5:
+                generate_bar_chart(words_pos, 'Top 15 Words Positive Sentiment')
+            with col6:
+                generate_bar_chart(words_neg, 'Top 15 Words Negative Sentiment')
 
     # LSTM Model and Input Box
     st.header("Sentiment Prediction with LSTM")
