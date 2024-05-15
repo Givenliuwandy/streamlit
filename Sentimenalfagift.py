@@ -69,8 +69,8 @@ if uploaded_file is not None:
         df = pd.read_csv(uploaded_file)
 
         # Rename columns
-        df = df.rename(columns={'tbtdr_rating': 'score', 'tbtdr_review': 'content'})
-        df = df.drop(columns=['tbtdr_id', 'tbtdr_created_date'])
+        df = df.rename(columns={'tb_rating': 'score', 'tb_review': 'content'})
+        df = df.drop(columns=['tb_id', 'tb_created_date'])
 
         # Labeling data based on rating
         label = []
