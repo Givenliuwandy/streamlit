@@ -5,6 +5,7 @@ import numpy as np
 import nltk
 from nltk.corpus import stopwords
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
+import sklearn
 from sklearn.preprocessing import LabelEncoder
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
