@@ -5,8 +5,6 @@ import numpy as np
 import nltk
 from nltk.corpus import stopwords
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
-import sklearn
-from sklearn.preprocessing import LabelEncoder
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from collections import Counter
@@ -170,8 +168,6 @@ if uploaded_file is not None:
     if st.button("Predict Sentiment"):
         reviews = df['content'].values
         labels = df['label'].values
-        encoder = LabelEncoder()
-        encoded_labels = encoder.fit_transform(labels)
         # Hyperparameters of the model
         
         vocab_size = 3000
