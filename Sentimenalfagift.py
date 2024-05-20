@@ -97,6 +97,10 @@ if uploaded_file is not None:
         df = df.rename(columns={'tb_rating': 'score', 'tb_review': 'content'})
         df = df.drop(columns=['tb_id', 'tb_created_date'])
 
+        # Apply stop words removal and data cleaning to DataFrame column
+        df['content'] = df['content'].apply(remove_stopwords)
+        df['content'] = df['content'].apply(clean_text)
+        
         # Label the sentiment of each review
         df['label'] = df['content'].apply(labeling_sentimen)
 
@@ -112,11 +116,7 @@ if uploaded_file is not None:
 
         st.write("Average length of each review : ", avg_length)
         st.write("Data processing completed.")
-
-        # Apply stop words removal and data cleaning to DataFrame column
-        df['content'] = df['content'].apply(remove_stopwords)
-        df['content'] = df['content'].apply(clean_text)
-
+        
         # Separate positive and negative sentiment data
         df_pos = df[df['label'] == 'positif']
         df_neg = df[df['label'] == 'negatif']
