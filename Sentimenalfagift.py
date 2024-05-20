@@ -157,6 +157,9 @@ if uploaded_file is not None:
 
         # Display word clouds and bar charts for positive and negative sentiments
         if st.button("Generate Word Cloud and Top words"):
+            st.session_state.wordcloud_generated = True
+
+        if st.session_state.get('wordcloud_generated', False):
             # Word cloud and top 10 words for positive sentiment
             st.write("<h2 style='text-align: center;'>Word Cloud:</h2>", unsafe_allow_html=True)
             col3, col4 = st.columns(2)
@@ -214,6 +217,7 @@ if uploaded_file is not None:
         st.header("Sentiment Prediction with LSTM")
         sentence_input = st.text_input("Enter a sentence:")
         if st.button("Predict Sentiment"):
+            st.session_state.wordcloud_generated = False  # Reset the wordcloud state
             # Tokenize input sentence and pad sequence
             sequences = tokenizer.texts_to_sequences([sentence_input])
             padded_input = pad_sequences(sequences, padding=padding_type, truncating=trunc_type, maxlen=max_length)
