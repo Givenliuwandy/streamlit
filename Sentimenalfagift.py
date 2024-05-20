@@ -184,9 +184,6 @@ if uploaded_file is not None:
         max_length = 200
         padding_type='post'
         trunc_type='post'  
-        model.compile(loss='binary_crossentropy',
-              optimizer='adam',
-              metrics=['accuracy'])
         # Tokenize sentences
         tokenizer = Tokenizer(num_words=vocab_size, oov_token=oov_tok)
         tokenizer.fit_on_texts(df['content'])
@@ -203,6 +200,10 @@ if uploaded_file is not None:
             keras.layers.Dense(24, activation='relu'),
             keras.layers.Dense(1, activation='sigmoid')
         ])
+        
+        modellstm.compile(loss='binary_crossentropy',
+              optimizer='adam',
+              metrics=['accuracy'])
         reviews = df['content'].values
         labels = df['label'].values
         num_epochs = 1
