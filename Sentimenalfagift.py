@@ -204,7 +204,7 @@ if uploaded_file is not None:
         reviews = df['content'].values
         labels = df['label'].values
         num_epochs = 1
-        history = model.fit(reviews, labels,
+        history = modellstm.fit(reviews, labels,
                     epochs=num_epochs)
         # Predict sentiment
         prediction = modellstm.predict(padded)
