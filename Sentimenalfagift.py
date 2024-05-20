@@ -166,14 +166,11 @@ if uploaded_file is not None:
     st.header("Sentiment Prediction with LSTM")
     sentence_input = st.text_input("Enter a sentence:")
     if st.button("Predict Sentiment"):
-        reviews = df['content'].values
-        labels = df['label'].values
         # Hyperparameters of the model
-        
         vocab_size = 3000
         oov_tok = ''
         embedding_dim = 100
-        max_length = 80
+        max_length = 200
         padding_type='post'
         trunc_type='post'
 
@@ -194,12 +191,6 @@ if uploaded_file is not None:
             keras.layers.Dense(1, activation='sigmoid')
         ])
 
-        # compile model
-        modellstm.compile(optimizer='adam')
-        num_epochs = 1
-        history = model.fit(reviews, encoded_labels,
-                    epochs=num_epochs, verbose=1,
-                    validation_split=0.1)
         # Predict sentiment
         prediction = modellstm.predict(padded)
 
