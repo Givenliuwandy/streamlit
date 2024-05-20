@@ -94,7 +94,7 @@ if uploaded_file is not None:
         df = pd.read_csv(uploaded_file)
 
         # Rename columns and drop unnecessary columns
-        df = df.rename(columns={'tb_rating': 'score', 'tb_review': 'content_indo'})
+        df = df.rename(columns={'tb_rating': 'score', 'tb_review': 'content'})
         df = df.drop(columns=['tb_id', 'tb_created_date'])
 
         # Label the sentiment of each review
@@ -104,7 +104,7 @@ if uploaded_file is not None:
         df = df[(df['label'] != 'netral') & (df['label'] != 'kosong')]
 
         # Calculate average length of each review
-        avg_length = df['content_indo'].apply(lambda x: len(x.split())).mean()
+        avg_length = df['content'].apply(lambda x: len(x.split())).mean()
 
         # Calculate percentage of positive and negative sentiments
         pos_percentage = (df['label'] == 'positif').mean() * 100
@@ -114,7 +114,7 @@ if uploaded_file is not None:
         st.write("Data processing completed.")
 
         # Apply stop words removal and data cleaning to DataFrame column
-        df['content'] = df['content_indo'].apply(remove_stopwords)
+        df['content'] = df['content'].apply(remove_stopwords)
         df['content'] = df['content'].apply(clean_text)
 
         # Separate positive and negative sentiment data
