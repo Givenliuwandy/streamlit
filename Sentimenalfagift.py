@@ -3,7 +3,6 @@ import pandas as pd
 import re
 import numpy as np
 import nltk
-nltk.download('punkt')
 from nltk.corpus import stopwords
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from wordcloud import WordCloud
@@ -11,17 +10,52 @@ import matplotlib.pyplot as plt
 from collections import Counter
 from tensorflow import keras
 from keras.preprocessing.sequence import pad_sequences
-import tensorflow as tf
 from tensorflow.keras.preprocessing.text import Tokenizer
 
+# Download NLTK resources
+nltk.download('punkt')
+nltk.download('wordnet')
+nltk.download('omw-1.4')
+nltk.download('stopwords')
+
+# Set Streamlit options
 st.set_option('deprecation.showPyplotGlobalUse', False)
+
+# Load positive and negative lexicons
+positive_lexicon = pd.read_csv("positive.csv")
+negative_lexicon = pd.read_csv("negative.csv")
+positive_lexicon_dict = dict(zip(positive_lexicon['word'], positive_lexicon['weight']))
+negative_lexicon_dict = dict(zip(negative_lexicon['word'], negative_lexicon['weight']))
+
+# Define functions for text processing and sentiment labeling
+def remove_stopwords(text):
+    stop_words = set(stopwords.words('indonesian'))
+    custom_stop_words = {'yg', 'nya', 'aja'}
+    stop_words.update(custom_stop_words)
+    return ' '.join([word for word in text.split() if word not in stop_words])
+
+def clean_text(text):
+    removelist = "yg"
+    text = re.sub('<.*?>', '', text)          # Remove HTML tags
+    text = re.sub('https://.*', '', text)     # Remove URLs
+    text = re.sub(r'[^a-zA-Z'+removelist+']', ' ', text)    # Remove non-alphanumeric characters
+    text = text.lower()
+    return text
+
+def labeling_sentimen(sentence):
+    words = sentence.split()
+    sentence_score = sum(positive_lexicon_dict.get(word, 0) for word in words) + sum(negative_lexicon_dict.get(word, 0) for word in words)
+
+    if sentence_score > 0:
+        return "positif"
+    elif sentence_score <= 0:
+        return "negatif"
+    else:
+        return "netral"
 
 # Define generate_word_cloud function
 def generate_word_cloud(text_data, title=None):
-    # Generate word cloud
     wordcloud = WordCloud(width=300, height=200, background_color='white').generate(text_data)
-
-    # Plot word cloud
     plt.figure(figsize=(8, 5))
     plt.imshow(wordcloud, interpolation='bilinear')
     plt.axis('off')
@@ -31,20 +65,11 @@ def generate_word_cloud(text_data, title=None):
 
 # Define generate_bar_chart function
 def generate_bar_chart(text_data, title=None):
-    # Tokenize words
     words = nltk.word_tokenize(text_data)
-
-    # Remove stopwords
     stop_words = set(stopwords.words('indonesian'))
     words = [word for word in words if word.lower() not in stop_words]
-
-    # Count word frequencies
     word_freq = Counter(words)
-
-    # Get top 10 words and their frequencies
     top_words = dict(word_freq.most_common(15))
-
-    # Plot bar chart
     plt.figure(figsize=(8, 5))
     plt.bar(top_words.keys(), top_words.values(), color='skyblue')
     plt.xlabel('Words')
@@ -68,7 +93,7 @@ if uploaded_file is not None:
     if uploaded_file.type == 'text/csv':
         df = pd.read_csv(uploaded_file)
 
-        # Rename columns
+        # Rename columns and drop unnecessary columns
         df = df.rename(columns={'tb_rating': 'score', 'tb_review': 'content'})
         df = df.drop(columns=['tb_id', 'tb_created_date'])
 
@@ -97,32 +122,14 @@ if uploaded_file is not None:
         neg_percentage = (df['label'] == 'negatif').mean() * 100
 
         st.write("Average length of each review : ", avg_length)
-
-        # Display data processing completion message
         st.write("Data processing completed.")
 
-        # Define stopwords and custom stop words
-        nltk.download('wordnet')
-        nltk.download('omw-1.4')
-        nltk.download('stopwords')
+        # Apply stop words removal and data cleaning to DataFrame column
+        df['content'] = df['content'].apply(remove_stopwords)
+        df['content'] = df['content'].apply(clean_text)
 
-        from nltk.corpus import stopwords
-        stop_words = set(stopwords.words('indonesian'))
-        custom_stop_words = {'yg', 'nya', 'aja'}
-        stop_words.update(custom_stop_words)
-
-        # Function to remove HTML tags, URLs, non-alphanumeric characters, and stopwords
-        def remove_tags(string):
-            removelist = "yg"
-            result = re.sub('<.*?>', '', string)          # Remove HTML tags
-            result = re.sub('https://.*', '', result)     # Remove URLs
-            result = re.sub(r'[^a-zA-Z'+removelist+']', ' ', result)    # Remove non-alphanumeric characters
-            result = result.lower()
-            return result
-
-        # Apply stop words removal and stemming to DataFrame column
-        df['content'] = df['content'].apply(lambda x: ' '.join([word for word in x.split() if word not in stop_words]))
-        df['content'] = df['content'].apply(lambda cw: remove_tags(cw))
+        # Label the sentiment of each review
+        df['label'] = df['content'].apply(labeling_sentimen)
 
         # Separate positive and negative sentiment data
         df_pos = df[df['label'] == 'positif']
@@ -142,7 +149,7 @@ if uploaded_file is not None:
             labels = ['Positive', 'Negative']
             sizes = [pos_percentage, neg_percentage]
             ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, colors=['skyblue', 'lightcoral'])
-            ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+            ax.axis('equal')
             st.pyplot(fig)
 
         with col2:
@@ -165,52 +172,4 @@ if uploaded_file is not None:
             st.write("<h2 style='text-align: center;'>Top 15 Words:</h2>", unsafe_allow_html=True)
             col5, col6 = st.columns(2)
             with col5:
-                generate_bar_chart(words_pos, 'Top 15 Words Positive Sentiment')
-            with col6:
-                generate_bar_chart(words_neg, 'Top 15 Words Negative Sentiment')
-
-    # LSTM Model and Input Box
-    st.header("Sentiment Prediction with LSTM")
-    sentence_input = st.text_input("Enter a sentence:")
-    if st.button("Predict Sentiment"):
-        # Hyperparameters of the model
-        vocab_size = 3000
-        oov_tok = ''
-        embedding_dim = 100
-        max_length = 200
-        padding_type='post'
-        trunc_type='post'
-
-        # Tokenize sentences
-        tokenizer = Tokenizer(num_words=vocab_size, oov_token=oov_tok)
-        tokenizer.fit_on_texts(df['content'])
-        word_index = tokenizer.word_index
-
-        # Convert input sentence to sequence and pad sequences
-        sequences = tokenizer.texts_to_sequences([sentence_input])
-        padded = pad_sequences(sequences, padding=padding_type, truncating=trunc_type, maxlen=max_length)
-
-        # Load the LSTM model
-        # Hyperparameters of the model
-        vocab_size = 3000
-        oov_tok = ''
-        embedding_dim = 100
-        max_length = 200
-        padding_type='post'
-        trunc_type='post'
-
-        modellstm = keras.Sequential([
-        keras.layers.Embedding(vocab_size, embedding_dim, input_length=max_length),
-        keras.layers.Bidirectional(keras.layers.LSTM(64)),
-        keras.layers.Dense(24, activation='relu'),
-        keras.layers.Dense(1, activation='sigmoid')
-        ])
-
-        # Predict sentiment
-        prediction = modellstm.predict(padded)
-
-        # Output the sentiment prediction
-        if prediction >= 0.5:
-            st.write("Predicted sentiment: Positive😁👍")
-        else:
-            st.write("Predicted sentiment: Negative😭👎")
+                generate
