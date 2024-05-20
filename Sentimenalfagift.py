@@ -173,10 +173,8 @@ if uploaded_file is not None:
             with col6:
                 generate_bar_chart(words_neg, 'Top 15 Words Negative Sentiment')
 
-    # LSTM Model and Input Box
-    st.header("Sentiment Prediction with LSTM")
-    sentence_input = st.text_input("Enter a sentence:")
-    if st.button("Predict Sentiment"):
+        # Train the LSTM model
+        st.header("Training LSTM Model")
         # Hyperparameters of the model
         vocab_size = 3000
         oov_tok = ''
@@ -191,7 +189,7 @@ if uploaded_file is not None:
         word_index = tokenizer.word_index
 
         # Convert input sentence to sequence and pad sequences
-        sequences = tokenizer.texts_to_sequences([sentence_input])
+        sequences = tokenizer.texts_to_sequences(df['content'])
         padded = pad_sequences(sequences, padding=padding_type, truncating=trunc_type, maxlen=max_length)
 
         # Load the LSTM model
@@ -208,17 +206,23 @@ if uploaded_file is not None:
                           metrics=['accuracy'])
         
         # Train the model
-        reviews = tokenizer.texts_to_sequences(df['content'])
-        padded_reviews = pad_sequences(reviews, padding=padding_type, truncating=trunc_type, maxlen=max_length)
         labels = (df['label'] == 'positif').astype(int)  # Convert labels to binary
         num_epochs = 1
-        history = modellstm.fit(padded_reviews, labels, epochs=num_epochs, verbose=1)
+        history = modellstm.fit(padded, labels, epochs=num_epochs, verbose=1)
+        
+        # LSTM Model and Input Box
+        st.header("Sentiment Prediction with LSTM")
+        sentence_input = st.text_input("Enter a sentence:")
+        if st.button("Predict Sentiment"):
+            # Tokenize input sentence and pad sequence
+            sequences = tokenizer.texts_to_sequences([sentence_input])
+            padded_input = pad_sequences(sequences, padding=padding_type, truncating=trunc_type, maxlen=max_length)
 
-        # Predict sentiment
-        prediction = modellstm.predict(padded)
+            # Predict sentiment
+            prediction = modellstm.predict(padded_input)
 
-        # Output the sentiment prediction
-        if prediction >= 0.5:
-            st.write("Predicted sentiment: Positive😁👍")
-        else:
-            st.write("Predicted sentiment: Negative😭👎")
+            # Output the sentiment prediction
+            if prediction >= 0.5:
+                st.write("Predicted sentiment: Positive😁👍")
+            else:
+                st.write("Predicted sentiment: Negative😭👎")
