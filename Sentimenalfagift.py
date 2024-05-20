@@ -94,21 +94,17 @@ if uploaded_file is not None:
         df = pd.read_csv(uploaded_file)
 
         # Rename columns and drop unnecessary columns
-        df = df.rename(columns={'tb_rating': 'score', 'tb_review': 'content'})
+        df = df.rename(columns={'tb_rating': 'score', 'tb_review': 'content_indo'})
         df = df.drop(columns=['tb_id', 'tb_created_date'])
 
-        # Apply stop words removal and data cleaning to DataFrame column
-        df['content'] = df['content'].apply(remove_stopwords)
-        df['content'] = df['content'].apply(clean_text)
-        
         # Label the sentiment of each review
-        df['label'] = df['content'].apply(labeling_sentimen)
+        df['label'] = df['content_indo'].apply(labeling_sentimen)
 
         # Filter out 'netral' and 'kosong' labels
         df = df[(df['label'] != 'netral') & (df['label'] != 'kosong')]
 
         # Calculate average length of each review
-        avg_length = df['content'].apply(lambda x: len(x.split())).mean()
+        avg_length = df['content_indo'].apply(lambda x: len(x.split())).mean()
 
         # Calculate percentage of positive and negative sentiments
         pos_percentage = (df['label'] == 'positif').mean() * 100
@@ -116,7 +112,11 @@ if uploaded_file is not None:
 
         st.write("Average length of each review : ", avg_length)
         st.write("Data processing completed.")
-        
+
+        # Apply stop words removal and data cleaning to DataFrame column
+        df['content'] = df['content_indo'].apply(remove_stopwords)
+        df['content'] = df['content'].apply(clean_text)
+
         # Separate positive and negative sentiment data
         df_pos = df[df['label'] == 'positif']
         df_neg = df[df['label'] == 'negatif']
@@ -135,7 +135,7 @@ if uploaded_file is not None:
             labels = ['Positive', 'Negative']
             sizes = [pos_percentage, neg_percentage]
             ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, colors=['skyblue', 'lightcoral'])
-            ax.axis('equal')
+            ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
             st.pyplot(fig)
 
         with col2:
@@ -162,40 +162,32 @@ if uploaded_file is not None:
             with col6:
                 generate_bar_chart(words_neg, 'Top 15 Words Negative Sentiment')
 
-    # LSTM Model and Input Box
-    st.header("Sentiment Prediction with LSTM")
-    sentence_input = st.text_input("Enter a sentence:")
-    if st.button("Predict Sentiment"):
-        # Hyperparameters of the model
-        vocab_size = 3000
-        oov_tok = ''
-        embedding_dim = 100
-        max_length = 200
-        padding_type='post'
-        trunc_type='post'
+        # LSTM Model and Input Box
+        st.header("Sentiment Prediction with LSTM")
+        sentence_input = st.text_input("Enter a sentence:")
+        if st.button("Predict Sentiment"):
+            # Tokenization and padding
+            tokenizer = Tokenizer()
+            tokenizer.fit_on_texts(df['content'])
+            vocab_size = len(tokenizer.word_index) + 1
+            max_length = max([len(s.split()) for s in df['content']])
+            padded_sequences = pad_sequences(tokenizer.texts_to_sequences([sentence_input]), maxlen=max_length)
 
-        # Tokenize sentences
-        tokenizer = Tokenizer(num_words=vocab_size, oov_token=oov_tok)
-        tokenizer.fit_on_texts(df['content'])
-        word_index = tokenizer.word_index
+            # Model training
+            model = keras.Sequential([
+                keras.layers.Embedding(vocab_size, 100, input_length=max_length),
+                keras.layers.Bidirectional(keras.layers.LSTM(64)),
+                keras.layers.Dense(24, activation='relu'),
+                keras.layers.Dense(1, activation='sigmoid')
+            ])
+            model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+            model.fit(padded_sequences, np.array([0]), epochs=1, verbose=0)
 
-        # Convert input sentence to sequence and pad sequences
-        sequences = tokenizer.texts_to_sequences([sentence_input])
-        padded = pad_sequences(sequences, padding=padding_type, truncating=trunc_type, maxlen=max_length)
+            # Sentiment prediction
+            prediction = model.predict(padded_sequences)
 
-        # Load the LSTM model
-        modellstm = keras.Sequential([
-            keras.layers.Embedding(vocab_size, embedding_dim, input_length=max_length),
-            keras.layers.Bidirectional(keras.layers.LSTM(64)),
-            keras.layers.Dense(24, activation='relu'),
-            keras.layers.Dense(1, activation='sigmoid')
-        ])
-
-        # Predict sentiment
-        prediction = modellstm.predict(padded)
-
-        # Output the sentiment prediction
-        if prediction >= 0.5:
-            st.write("Predicted sentiment: Positive😁👍")
-        else:
-            st.write("Predicted sentiment: Negative😭👎")
+            # Output the sentiment prediction
+            if prediction >= 0.5:
+                st.write("Predicted sentiment: Positive 😁👍")
+            else:
+                st.write("Predicted sentiment: Negative 😭👎")
