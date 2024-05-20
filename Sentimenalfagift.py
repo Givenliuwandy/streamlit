@@ -11,12 +11,23 @@ from collections import Counter
 from tensorflow import keras
 from keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import Tokenizer
+import os
+
+# Specify NLTK data directory
+nltk_data_dir = "/home/appuser/nltk_data"
+
+# Check if NLTK data directory exists, if not, create it
+if not os.path.exists(nltk_data_dir):
+    os.makedirs(nltk_data_dir)
+
+# Set NLTK data directory
+nltk.data.path.append(nltk_data_dir)
 
 # Download NLTK resources
-nltk.download('punkt')
-nltk.download('wordnet')
-nltk.download('omw-1.4')
-nltk.download('stopwords')
+nltk.download('punkt', download_dir=nltk_data_dir)
+nltk.download('wordnet', download_dir=nltk_data_dir)
+nltk.download('omw-1.4', download_dir=nltk_data_dir)
+nltk.download('stopwords', download_dir=nltk_data_dir)
 
 # Set Streamlit options
 st.set_option('deprecation.showPyplotGlobalUse', False)
