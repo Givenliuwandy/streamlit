@@ -183,8 +183,8 @@ if uploaded_file is not None:
         embedding_dim = 100
         max_length = 200
         padding_type='post'
-        trunc_type='post'
-
+        trunc_type='post'  
+        
         # Tokenize sentences
         tokenizer = Tokenizer(num_words=vocab_size, oov_token=oov_tok)
         tokenizer.fit_on_texts(df['content'])
@@ -201,7 +201,11 @@ if uploaded_file is not None:
             keras.layers.Dense(24, activation='relu'),
             keras.layers.Dense(1, activation='sigmoid')
         ])
-
+        reviews = df['content'].values
+        labels = df['label'].values
+        num_epochs = 1
+        history = model.fit(reviews, labels,
+                    epochs=num_epochs)
         # Predict sentiment
         prediction = modellstm.predict(padded)
 
