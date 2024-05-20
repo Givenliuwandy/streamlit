@@ -183,7 +183,8 @@ if uploaded_file is not None:
         embedding_dim = 100
         max_length = 200
         padding_type='post'
-        trunc_type='post'  
+        trunc_type='post'
+
         # Tokenize sentences
         tokenizer = Tokenizer(num_words=vocab_size, oov_token=oov_tok)
         tokenizer.fit_on_texts(df['content'])
@@ -201,14 +202,18 @@ if uploaded_file is not None:
             keras.layers.Dense(1, activation='sigmoid')
         ])
         
+        # Compile the model
         modellstm.compile(loss='binary_crossentropy',
-              optimizer='adam',
-              metrics=['accuracy'])
-        reviews = df['content'].values
-        labels = df['label'].values
+                          optimizer='adam',
+                          metrics=['accuracy'])
+        
+        # Train the model
+        reviews = tokenizer.texts_to_sequences(df['content'])
+        padded_reviews = pad_sequences(reviews, padding=padding_type, truncating=trunc_type, maxlen=max_length)
+        labels = (df['label'] == 'positif').astype(int)  # Convert labels to binary
         num_epochs = 1
-        history = modellstm.fit(reviews, labels,
-                    epochs=num_epochs)
+        history = modellstm.fit(padded_reviews, labels, epochs=num_epochs, verbose=1)
+
         # Predict sentiment
         prediction = modellstm.predict(padded)
 
